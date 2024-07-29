@@ -2,9 +2,9 @@ import base64
 import requests
 import os
 
-client_id = os.environ['SPOTIFY_CLIENT_ID']
-client_secret = os.environ['SPOTIFY_CLIENT_SECRET']
-redirect_uri = os.environ['SPOTIFY_REDIRECT_URI']
+client_id = os.environ['c4ec12b33f8548bfb9152254836b777f']
+client_secret = os.environ['fe2392ff7b8a4fb3a59c1ccc9188fc52']
+redirect_uri = os.environ['http://localhost:27228/spotify_callback']
 auth_header = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
 headers = {
     "Authorization": f"Basic {auth_header}",
