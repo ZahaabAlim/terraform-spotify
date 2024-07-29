@@ -1,29 +1,28 @@
-import base64
 import requests
-import os
+import base64
 
-client_id = os.environ['SPOTIFY_CLIENT_ID']
-client_secret = os.environ['SPOTIFY_CLIENT_SECRET']
-redirect_uri = os.environ['SPOTIFY_REDIRECT_URI']
-auth_header = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+# Your Client ID and Client Secret
+client_id = 'c4ec12b33f8548bfb9152254836b777f'
+client_secret = 'fe2392ff7b8a4fb3a59c1ccc9188fc52'
+
+# Encode the client ID and client secret
+auth_str = f"{client_id}:{client_secret}"
+b64_auth_str = base64.b64encode(auth_str.encode()).decode()
+
+# Request headers
 headers = {
-    "Authorization": f"Basic {auth_header}",
-    "Content-Type": "application/x-www-form-urlencoded"
+    'Authorization': f'Basic {b64_auth_str}',
+    'Content-Type': 'application/x-www-form-urlencoded'
 }
-auth_url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={client_id}&scope=playlist-modify-public&redirect_uri={redirect_uri}"
-print(f"Authorize your app by visiting this url: {auth_url}")
 
-# Read the authorization code from an environment variable
-code = os.environ.get('SPOTIFY_AUTH_CODE')
-if not code:
-    raise ValueError("Authorization code not found. Please set the SPOTIFY_AUTH_CODE environment variable.")
-
+# Request body
 data = {
-    "grant_type": "authorization_code",
-    "code": code,
-    "redirect_uri": redirect_uri
+    'grant_type': 'client_credentials'
 }
+
+# Make the POST request
 response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
-response_data = response.json()
-access_token = response_data['access_token']
-print(f"::set-output name=spotify_access_token::{access_token}")
+
+# Get the access token from the response
+access_token = response.json().get('access_token')
+print(f"Access Token: {access_token}")
