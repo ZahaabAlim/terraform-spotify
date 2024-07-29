@@ -12,7 +12,12 @@ headers = {
 }
 auth_url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={client_id}&scope=playlist-modify-public&redirect_uri={redirect_uri}"
 print(f"Authorize your app by visiting this url: {auth_url}")
-code = input("Enter the authorization code obtained from the URL: ")
+
+# Read the authorization code from an environment variable
+code = os.environ.get('SPOTIFY_AUTH_CODE')
+if not code:
+    raise ValueError("Authorization code not found. Please set the SPOTIFY_AUTH_CODE environment variable.")
+
 data = {
     "grant_type": "authorization_code",
     "code": code,
