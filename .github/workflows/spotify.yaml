@@ -13,8 +13,19 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Run Spotify Auth Proxy
         run: |
-          docker run --rm -p 27228:27228 \
+          docker run --rm -d -p 27228:27228 \
             -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} \
             -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} \
             ghcr.io/conradludgate/spotify-auth-proxy
-          docker logs $(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
+      - name: Display Auth URL and API Key
+        run: |
+          CONTAINER_ID=$(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
+          docker logs $CONTAINER_ID
+          AUTH_URL=$(docker logs $CONTAINER_ID | grep 'Auth URL' | awk '{print $NF}')
+          API_KEY=$(docker logs $CONTAINER_ID | grep 'API Key' | awk '{print $NF}')
+          echo "Auth URL: $AUTH_URL"
+          echo "API Key: $API_KEY"
+      - name: Terminate Workflow
+        run: |
+          CONTAINER_ID=$(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
+          docker stop $CONTAINER_ID
