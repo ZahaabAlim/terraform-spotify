@@ -12,11 +12,9 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
       - name: Run Spotify Auth Proxy
-        env:
-          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
-          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: |
-          echo "SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}" > .env
-          echo "SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}" >> .env
-          docker run --rm -p 27228:27228 --env-file ./.env ghcr.io/conradludgate/spotify-auth-proxy
+          docker run --rm -p 27228:27228 \
+            -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} \
+            -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} \
+            ghcr.io/conradludgate/spotify-auth-proxy
           docker logs $(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
