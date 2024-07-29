@@ -24,6 +24,11 @@ jobs:
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REDIRECT_URI: ${{ secrets.SPOTIFY_REDIRECT_URI }}
+      - name: Debug Token
+        run: echo "Token: ${{ steps.get_token.outputs.spotify_access_token }}"
+        env:
+          spotify_access_token: ${{ steps.get_token.outputs.spotify_access_token }}
+        if: always() # Ensure this runs even if the previous step fails
   terraform:
     needs: authenticate
     runs-on: ubuntu-latest
@@ -36,5 +41,7 @@ jobs:
         run: terraform init
       - name: Terraform Plan
         run: terraform plan -var="spotify_access_token=${{ needs.authenticate.outputs.spotify_access_token }}"
+        timeout-minutes: 10
       - name: Terraform Apply
         run: terraform apply -auto-approve -var="spotify_access_token=${{ needs.authenticate.outputs.spotify_access_token }}"
+        timeout-minutes: 10
