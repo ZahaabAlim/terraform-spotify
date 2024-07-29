@@ -9,15 +9,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
+
       - name: Run Spotify Auth Proxy
         run: |
           docker run --rm -d -p 27228:27228 \
             -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} \
             -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} \
             ghcr.io/conradludgate/spotify-auth-proxy
+
       - name: Display Auth URL and API Key
+        id: display-auth
         run: |
           CONTAINER_ID=$(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
           docker logs $CONTAINER_ID
@@ -25,7 +29,15 @@ jobs:
           API_KEY=$(docker logs $CONTAINER_ID | grep 'API Key' | awk '{print $NF}')
           echo "Auth URL: $AUTH_URL"
           echo "API Key: $API_KEY"
+          echo "::set-output name=auth_url::$AUTH_URL"
+          echo "::set-output name=api_key::$API_KEY"
+
       - name: Terminate Workflow
         run: |
           CONTAINER_ID=$(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
           docker stop $CONTAINER_ID
+
+      - name: Output Auth URL and API Key
+        run: |
+          echo "Auth URL: ${{ steps.display-auth.outputs.auth_url }}"
+          echo "API Key: ${{ steps.display-auth.outputs.api_key }}"
