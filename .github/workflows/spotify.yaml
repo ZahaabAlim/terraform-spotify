@@ -9,27 +9,39 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
+
       - name: Run Spotify Auth Proxy
         run: |
           docker run --rm -d -p 27228:27228 \
             -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} \
             -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} \
             ghcr.io/conradludgate/spotify-auth-proxy
+
       - name: Display Auth URL and API Key
+        id: display-auth
         run: |
           CONTAINER_ID=$(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
           docker logs $CONTAINER_ID
           AUTH_URL=$(docker logs $CONTAINER_ID | grep 'Auth URL' | awk '{print $NF}')
           API_KEY=$(docker logs $CONTAINER_ID | grep 'API Key' | awk '{print $NF}')
+          echo "AUTH_URL=$AUTH_URL" >> $GITHUB_ENV
+          echo "API_KEY=$API_KEY" >> $GITHUB_ENV
           echo "Auth URL: $AUTH_URL"
           echo "API Key: $API_KEY"
-      - name: Open Auth URL and Authenticate
-        run: |
-          AUTH_URL=$(docker logs $CONTAINER_ID | grep 'Auth URL' | awk '{print $NF}')
-          curl -X GET "$AUTH_URL"
+
       - name: Terminate Workflow
         run: |
           CONTAINER_ID=$(docker ps -q --filter ancestor=ghcr.io/conradludgate/spotify-auth-proxy)
           docker stop $CONTAINER_ID
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var "api_key=${{ env.API_KEY }}"
